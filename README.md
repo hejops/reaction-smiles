@@ -40,9 +40,9 @@ electrophiles = {
 }
 
 transformations = {
-        "[C:1]=[CX3:2].[CX3+:11]>>[C+:1][CX3:2][C+0:11]",
-        ["alkene", "C+"],
-				...
+		"[C:1]=[CX3:2].[CX3+:11]>>[C+:1][CX3:2][C+0:11]",
+		["alkene", "C+"],
+		...
 }
 ```
 
