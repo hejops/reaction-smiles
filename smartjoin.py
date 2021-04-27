@@ -195,12 +195,17 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
 
             good_smiles[full_smiles] = current_reaction
 
-            if j + 1 == len(x):
-                print(f"{i+1}: {current_reaction}, {j} products")
+            # avoid going into low priority transformations if good products
+            # have already been found
+            if attempted_transformation["smarts"] in ugly_transformations and good_smiles:
+                break
 
-            # stop after 20 products obtained
+            # stop after 20 products obtained?
             if len(good_smiles) == 20:
                 break
+
+            if j + 1 == len(x):
+                print(f"{i+1}: {current_reaction}, {j} products")
 
     # logging.info(good_smiles)
     # sys.exit()
