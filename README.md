@@ -1,5 +1,3 @@
----
-
 Automatically generate products from reactant SMILES.
 
 # Usage
@@ -14,10 +12,13 @@ sanitization errors encountered will be written to `[file]_err.csv`). To
 generate images, run `generate_images.py` on this output file.
 
 ## Dependencies:
+
 - Python 3.9.4
 - RDKit 2021.03.1b1
 
-# What this program does
+# How the program works
+
+## Generate transformations
 
 `transforms.py` consists primarily of two dictionaries: one for nucleophiles
 and one for electrophiles. Each nucleophile/electrophile is represented as a
@@ -45,16 +46,22 @@ transformations = {
 }
 ```
 
-`smartjoin.py` accepts two reactants (represented as SMILES) and determines the
-most likely product by iterating through the entire set of transformations,
-attempting to find each substructure match, applying the corresponding
-transformation, and then collecting all possible products. Sanitized products
-obtained complex transformations typically take precedence over those obtained
-from less complex ones, and the first product obtained is assumed to be the
-correct one.
+## Get products out of reactants
 
-Important note: false substructure matches may be obtained; these will be fixed
-in due time.
+`smartjoin.py` accepts two reactants (represented as SMILES) and determines the
+most likely product by:
+
+1. iterating through the entire set of transformations,
+1. attempting to find each substructure match,
+1. applying the corresponding transformation,
+1. attempting to sanitize all possible products.
+
+Sanitized products obtained from complex transformations typically take
+precedence over those obtained from less complex ones, and the first product
+obtained is assumed to be the correct one.
+
+**Important note**: false substructure matches may be obtained; these will be
+fixed in due time!
 
 ```
 $ python3 smartjoin.py 'C1CS[C+](S1)C1=CC=CC=C1.CCCC[Sn](CCCC)(CCCC)CC=C
@@ -66,12 +73,14 @@ C1CS[C+](S1)C1=CC=CC=C1.CCCC[Sn](CCCC)(CCCC)CC=C>>CCCC[Sn](C[CH+]CC1(C2=CC=CC=C2
 ['alkene', 'C+']
 ```
 
+## Iterate through csv file, generate images
+
 `generate_products.py` simply parses a csv file and calls `smartjoin.py` on
 every reactant SMILES string that it finds. The results are written to a new
 csv file. This new file can then be passed to `generate_images.py` to generate
 images for all reactions.
 
-The resulting image will look like this:
+The resulting image should look like this:
 
 ![](example.png)
 
