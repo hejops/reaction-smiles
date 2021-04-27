@@ -50,40 +50,37 @@ def dump_all(x):
 # reactants = [x for x in reactants if not (x in seen or seen_add(x))]
 
 
-def main(db, startidx=0, strict=False):
+def main(db, col, startidx, strict):
     """
     Extract all reactants from a csv file and generate products
 
-    By default, file.csv will be written to file_out.csv
+    By default, [file].csv will be written to [file]_out.csv
     """
 
     if not Path(db).is_file():
         print(f"{db} is not a valid file!")
         sys.exit()
 
-    # # TODO: move this to csvops.py
-    # with open(db) as f:
-    #     # TODO: detect if there is a header
-    #     reactions = [row.split(",")[0] for row in f][1:]
-    # reactions = reactions[startidx:]
-
-    csv_data = []
     warn = 0
+    passed_rxns = []
+    failed_rxns = []
     start_time = time.time()
 
     reader = csv.DictReader(open(db))
     t = sum(1 for row in open(db))
-    # print(row_count)
-    # t = len(list(reader))
-    # with open(db) as f:
-    #     reader = csv.DictReader(f)
 
     for i, row in enumerate(reader):
+        # col = "SMILES"
         N = row["N"]
-        reaction = row["SMILES"]
+        reaction = row[col]
 
-        # TODO: return name as list
-        i += startidx
+        if ">>" in reaction:
+            print(f"The {col} column of {db} appears to contain products")
+            sys.exit()
+
+        if i < startidx:
+            continue
+
         print(f"\rReaction {i}: ", end="")
         full_smiles, name, sanit = get_full_reaction(reaction)
 
@@ -96,24 +93,31 @@ def main(db, startidx=0, strict=False):
 
         else:
             print(f"{i} OK, but not sanitized")
+            failed_rxns.append(
+                {
+                    "Line": i + 1,
+                    "Reaction": full_smiles,
+                }
+            )
             warn += 1
 
         print(dashes)
 
-        csv_data.append(
+        passed_rxns.append(
             {
                 "Line": i + 1,
-                "Reaction (N)": N,
+                "N": N,
                 "Reactant 1": name[0],
                 "Reactant 2": name[1],
                 "Sanitized": sanit,
                 "Reactants": reaction,
-                "Full": full_smiles,
+                # keep headers consistent between in and out file
+                col: full_smiles,
             }
         )
 
-        if i == 100:
-            break
+        # if i == 100:
+        #     break
 
         # TODO: if smarts <8 colons, warn simple; this is not so easy because smarts is no longer returned
 
@@ -122,29 +126,34 @@ def main(db, startidx=0, strict=False):
 
     print(
         f"""
-    {len(csv_data)}/{t} rows processed successfully
+    {len(passed_rxns)}/{t} rows processed successfully
     Warning: {warn} products were unsanitized
-    Finished in {time.time() - start_time} seconds
-"""
+    Finished in {time.time() - start_time} seconds"""
     )
     # Note: {warn} reactions were obtained with relatively simple rules
 
-    # print(csv_data)
+    def dict_to_csv(listofdicts, file):
+        if not listofdicts:
+            return
 
-    outfile = db.replace(".csv", "_out.csv")
-    headers = list(csv_data[0])
-    with open(outfile, "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=headers)
-        writer.writeheader()
-        for data in csv_data:
-            writer.writerow(data)
+        with open(file, "w") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=list(listofdicts[0]))
+            writer.writeheader()
+            for data in listofdicts:
+                writer.writerow(data)
+        print(f"Wrote to {file}\n")
 
-    print(f"Wrote to {outfile}\n")
+    dict_to_csv(passed_rxns, db.replace(".csv", "_out.csv"))
+    dict_to_csv(failed_rxns, db.replace(".csv", "_err.csv"))
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description=main.__doc__)
+    parser = argparse.ArgumentParser(
+        description=main.__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        # formatter_class=SortingHelpFormatter,
+    )
 
     parser.add_argument(
         "file",
@@ -160,9 +169,18 @@ if __name__ == "__main__":
     # )
 
     parser.add_argument(
+        "-c",
+        "--column",
+        # const="col",
+        # action="store_const",
+        default="SMILES",
+        # nargs="+",
+        help="name of column containing SMILES to be processed",
+    )
+    parser.add_argument(
         "-C",
-        "--columns",
-        const="col",
+        "--extra-columns",
+        const="cols",
         action="store_const",
         # nargs="+",
         help="specify additional column header(s) to be extracted from csv",
@@ -184,5 +202,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    # print(args)
-    main(args.file, args.line, args.strict)
+    main(args.file, args.column, args.line, args.strict)
