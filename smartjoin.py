@@ -22,7 +22,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 # suppress annoying sanitization warnings
 # https://github.com/rdkit/rdkit/issues/2683#issuecomment-538872880
-RDLogger.DisableLog('rdApp.*')
+RDLogger.DisableLog("rdApp.*")
 
 dashes = "-" * shutil.get_terminal_size().columns
 
@@ -38,7 +38,8 @@ dashes = "-" * shutil.get_terminal_size().columns
 # https://stackoverflow.com/a/59394291
 # TODO: fix hinting? probably rdkit's fault
 
-def guess_rxn(reactants: str) -> dict:
+
+def guess_rxn(reactants: str, smarts=None) -> dict:
     """
     Arguments:
         reactants:	reactants (string: A.B)
@@ -76,6 +77,14 @@ def guess_rxn(reactants: str) -> dict:
 
     successful_rxns = {}
 
+    if smarts:
+        # if a known smarts is supplied use it; no need to iterate
+        names = transformations[smarts]
+        reaction = rdChemReactions.ReactionFromSmarts(smarts, useSmiles=False)
+        product_tuple = get_product_tuple(reactant_tuple, names)
+        successful_rxns[product_tuple] = {"smarts": smarts, "names": names}
+        return successful_rxns
+
     for smarts in transformations:
 
         # useSmiles=True leads to mangled products; don't use it!
@@ -85,7 +94,7 @@ def guess_rxn(reactants: str) -> dict:
         # names = " + ".join(names)
 
         if product_tuple:
-            successful_rxns[product_tuple] = { "smarts": smarts, "names": names }
+            successful_rxns[product_tuple] = {"smarts": smarts, "names": names}
 
         else:
             continue
@@ -158,7 +167,9 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
 
     # https://stackoverflow.com/a/53865188
     # ith reaction, jth product
-    for i, (product_tuple, attempted_transformation) in enumerate(successful_rxns.items()):
+    for i, (product_tuple, attempted_transformation) in enumerate(
+        successful_rxns.items()
+    ):
 
         x = [p[0] for p in product_tuple]
         for j, product in enumerate(x):
@@ -186,18 +197,25 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
 
             full_smiles = f"{reactants}>>{product_smiles}"
             # print(get_product_smiles(product_tuple[0][1])[0])
-        
+
             # TODO: with and (instead of or), products like Br- cannot be retrieved
-            if attempted_transformation["smarts"] in two_products and len(product_tuple) > 1:
+            if (
+                attempted_transformation["smarts"] in two_products
+                and len(product_tuple) > 1
+            ):
                 ps2, _ = get_product_smiles(product_tuple[0][1])
                 # print(ps2)
                 full_smiles += f".{ps2}"
 
             good_smiles[full_smiles] = current_reaction
+            print(attempted_transformation["names"], attempted_transformation["smarts"])
 
             # avoid going into low priority transformations if good products
             # have already been found
-            if attempted_transformation["smarts"] in ugly_transformations and good_smiles:
+            if (
+                attempted_transformation["smarts"] in ugly_transformations
+                and good_smiles
+            ):
                 break
 
             # stop after 20 products obtained?
@@ -243,6 +261,7 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
         print(bad_smiles[result])
         return result, bad_smiles[result], False
 
+
 def main():
     """
     Arguments:
@@ -263,6 +282,7 @@ def main():
             reactants = reactants.split(">")[0]
 
         get_full_reaction(reactants)
+
 
 if __name__ == "__main__":
     main()
