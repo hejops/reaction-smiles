@@ -262,6 +262,15 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
         return result, bad_smiles[result], False
 
 
+def use_known_smarts(reactants, smarts):
+    # if smarts is known, this can be used to fix errors
+    successful_rxns = guess_rxn(reactants, smarts)
+    p = get_product_smiles(list(successful_rxns)[0][0][0])[0]
+    f = f"{reactants}>>{p}"
+    print(f)
+    return f
+
+
 def main():
     """
     Arguments:
@@ -274,15 +283,17 @@ def main():
         print(main.__doc__)
         sys.exit()
 
-    if len(sys.argv) == 2:
+    reactants = sys.argv[1]
 
-        reactants = sys.argv[1]
-        if ">" in reactants:
-            print("Reaction detected (>>); product will be removed")
-            reactants = reactants.split(">")[0]
+    if ">" in reactants:
+        print("Reaction detected (>>); product will be removed")
+        reactants = reactants.split(">")[0]
 
+    if len(sys.argv) == 3:
+        use_known_smarts(reactants, sys.argv[2])
+
+    else:
         get_full_reaction(reactants)
-
 
 if __name__ == "__main__":
     main()
