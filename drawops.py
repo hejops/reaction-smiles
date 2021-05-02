@@ -29,7 +29,7 @@ def show_img(imgpath):
     IMG.show()
 
 
-def draw_mol(smiles, imgpath="structure.png", dims=(800, 200), show=False):
+def draw_mol(smiles, imgpath="structure.png", width=800, height=200, show=False):
     """
     Generate structure from SMILES
     """
@@ -45,7 +45,7 @@ def draw_mol(smiles, imgpath="structure.png", dims=(800, 200), show=False):
     if ">>" not in smiles:
 
         mol = Chem.MolFromSmiles(smiles)
-        d = rdMolDraw2D.MolDraw2DCairo(dims)  # or MolDraw2DSVG to get SVGs
+        d = rdMolDraw2D.MolDraw2DCairo(width,height)  # or MolDraw2DSVG to get SVGs
         # d.drawOptions().addAtomIndices = True
         d.DrawMolecule(mol)
 
@@ -53,7 +53,7 @@ def draw_mol(smiles, imgpath="structure.png", dims=(800, 200), show=False):
 
         # https://www.rdkit.org/docs/GettingStartedInPython.html#drawing-chemical-reactions
         rxn = AllChem.ReactionFromSmarts(smiles, useSmiles=True)
-        d = rdMolDraw2D.MolDraw2DCairo(dims)
+        d = rdMolDraw2D.MolDraw2DCairo(width,height)
         d.DrawReaction(rxn)
 
     d.FinishDrawing()
