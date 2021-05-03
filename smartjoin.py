@@ -198,13 +198,15 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
             full_smiles = f"{reactants}>>{product_smiles}"
             # print(get_product_smiles(product_tuple[0][1])[0])
 
-            # TODO: with and (instead of or), products like Br- cannot be retrieved
             if (
                 attempted_transformation["smarts"] in two_products
                 and len(product_tuple) > 1
             ):
                 ps2, _ = get_product_smiles(product_tuple[0][1])
-                # print(ps2)
+                full_smiles += f".{ps2}"
+
+            elif len(product_tuple) > 1:
+                ps2, _ = get_product_smiles(product_tuple[0][1])
                 full_smiles += f".{ps2}"
 
             good_smiles[full_smiles] = current_reaction
@@ -268,6 +270,14 @@ def use_known_smarts(reactants, smarts):
     p = get_product_smiles(list(successful_rxns)[0][0][0])[0]
     f = f"{reactants}>>{p}"
     print(f)
+
+    try:
+        p2 = get_product_smiles(list(successful_rxns)[0][0][1])[0]
+        print(f"Detected second product: {p2}")
+        f = f"{f}.{p2}"
+    except:
+        pass
+
     return f
 
 
@@ -293,7 +303,9 @@ def main():
         use_known_smarts(reactants, sys.argv[2])
 
     else:
-        get_full_reaction(reactants)
+        # get_full_reaction(reactants)
+        show_transformations(reactants)
+
 
 if __name__ == "__main__":
     main()
