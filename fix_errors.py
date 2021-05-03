@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
+# import csv
 # import requests
 # import urllib
 from pyfzf.pyfzf import FzfPrompt
-import csv
 import logging
 import os
 import pandas as pd
+import readline
 import shutil
 import sys
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+# logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 from smartjoin import *
 from drawops import *
@@ -21,7 +22,7 @@ def get_smarts(reactants):
     rxns = [delim.join(x["names"]) for x in list(successful_rxns.values())]
 
     fzf = FzfPrompt()
-    chosen_rxn = fzf.prompt(rxns, "--reverse")[0].split(delim)
+    chosen_rxn = fzf.prompt(rxns)[0].split(delim)
 
     for val in successful_rxns.values():
         if chosen_rxn in val.values():
@@ -29,7 +30,7 @@ def get_smarts(reactants):
             return val["smarts"]
 
 
-def main(smarts=None):
+def main():
     """
     Docstring
     """
@@ -37,38 +38,57 @@ def main(smarts=None):
     file = sys.argv[1]
 
     # TODO: argparse with int range https://stackoverflow.com/a/6512463
-    start = int(sys.argv[2])
+    # start = int(sys.argv[2])
+    # if len(sys.argv) == 4:
+    #     end = int(sys.argv[3])
+    # else:
+    #     end = start
+    # lines = range(start, end + 1)
+    # # sys.exit()
 
-    if len(sys.argv) == 4:
-        end = int(sys.argv[3])
-    else:
-        end = start
-
-    lines = range(start, end + 1)
-    # sys.exit()
+    # for line in lines:
 
     df = pd.read_csv(file)
+    x = []
 
-    for line in lines:
+    while True:
 
-        row = df["Line"] == line
-        bad_rxn = df.loc[row, "SMILES"].values.item().split(">>")[0]
-        N = df.loc[row, "N"].values.item()
+        try:
 
-        if not smarts:
+            line = input("Reaction number: ")
+
+            if not line:
+                line = x[-1] + 1
+            else:
+                line = int(line)
+
+            x.append(line)
+            # print(x)
+
+            row = df["Line"] == line
+            bad_rxn = df.loc[row, "SMILES"].values.item().split(">>")[0]
+            print(bad_rxn)
+            N = df.loc[row, "N"].values.item()
+
+            # if not smarts:
             smarts = get_smarts(bad_rxn)
+            # TODO: currently, looping is not much use if same smarts is always used
+            # use a try/except?
 
-        fixed_rxn = use_known_smarts(bad_rxn, smarts)
-        # TODO: exit if wrong smarts used (i.e. overshot)
+            fixed_rxn = use_known_smarts(bad_rxn, smarts)
 
-        df.at[row, "SMILES"] = fixed_rxn
-        # TODO: once this is robust, remember to reuse the filename
-        df.to_csv("test.csv", index=False)
-        imgpath = f"reactions/{line}_{N}.png"
-        draw_mol(fixed_rxn, imgpath)
+            df.at[row, "SMILES"] = fixed_rxn
+            imgpath = f"reactions/{line}_{N}.png"
+            draw_mol(fixed_rxn, imgpath)
 
-        print(f"Fixed reaction {line}")
+            print(f"Fixed reaction {line}")
 
+        except:
+            df.to_csv(file, index=False)
+            print(f"Wrote: {file}")
+            sys.exit()
+
+    # df.to_csv(file, index=False)
 
 if __name__ == "__main__":
     main()
