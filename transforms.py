@@ -18,9 +18,9 @@
 nucleophiles = {
     # these are not really needed since the alkene fallback works fine
     # "SnCC=C": ["[Sn:1][C:2][C:3]=[CX3:4]", "[Sn:1][C:2][C+:3][CX3:4]"],
-    # "SiCC=C": ["[Si:1][C:2][C:3]=[C:4]", "[Si:1][C:2][C+:3][C:4]"],
+    "SiCC=C": ["[Si:1][C:2][C:3]=[C:4]", "[Si:1][C:2][C+:3][C:4]"],
     # "silyl, from O": ["[Si:1][O:2][C:3]=[C:4]", "[Si:1][O+:2]=[C:3][C:4]"],
-    "silyl, SiOC=C": ["[Si:1][O:2][C:3]=[CH:4]", "[Si:1][O:2][C+:3][CH:4]"],
+    "silyl, SiOC=C": ["[Si:1][O:2][C:3]=[CX3:4]", "[Si:1][O:2][C+:3][CX3:4]"],
     # "silyl, sanit": ["[Si:1][O:2][C:3]=[C:4]", "[Si:1][O:2][C:3][C:4]"],
     "enolate": ["[C:1]=[C:2][O-:3]", "[C:1]=[C:2][O:3]"],
     "malonic acid: O=CCC=O": [
@@ -28,28 +28,35 @@ nucleophiles = {
         "[O:1]=[C:2][C+:3]([C:4]=[O:5])",
     ],
     "carboxylate": ["[O:1]=[C:2][O-:3]", "[O:1]=[C:2][O+0:3]"],
-    "azide": ["[N-:1]=[N+:2]=[N-:3]", "[N-:1]=[N+:2]=[N+0:3]"],
-    # TODO: this may be too general?
+    "azide, CNN-/NNN-": ["[N+:2]=[N-:3]", "[N+:2]=[N+0:3]"],
+    # "azide, NNC-": ["[N:1]#[N:2]=[CH:3]", "[N:1]#[N+:2][CH:3]"],
     "amide": ["[nH:1][c:2]=[O:3]", "[nH+:1]=[c:2][O:3]"],
     # "imidazole, H": ["[nH:1][c:2][n:3]", "[nH+:1][c:2][n:3]"],
     "imidazole": ["[n:1][c:2][n:3]", "[n+1:1][c:2][n:3]"],
     # "imidazole, de-arom": ["[n:1][c:2][n:3]", "[N+1:1]=[C:2][N:3]"],
     "pyridine": ["[n:1]([c:2])([c:3])", "[n+:1]([c:2])([c:3])"],
-    "enamine": ["[N:1][C:2]=[CH:3]", "[N+:1]=[C:2][C:3]"],
-    # "enamine, sanit": ["[N:1][C:2]=[CH:3]", "[N:1]=[C:2][C:3]"],
-    "enamine, aromatic": ["[nH:1][cH:2][c:3]", "[nH+:1][cH:2][c:3]"],
+    "enamine": ["[N:1][C:2]=[C:3]", "[N+:1]=[C:2][C:3]"],
+    "enamine, aromatic": ["[nX3:1][c:2][cH:3]", "[NX3+:1]=[C:2][CH:3]"],
     "NC=N": ["[N:1][C:2]=[N:3]", "[N+:1]=[C:2][N:3]"],
     "nitrile": ["[*+0:1][C:2]#[N:3]", "[*+0:1][C+:2]=[N:3]"],
     "S ylide": ["[S:1]=[CX3:2]", "[S+:1][CX3:2]"],
     "S ylide, N": ["[S:1][NH-:2]", "[S+:1][NH+0:2]"],
+    "alkene, C=CH2 or C=CH": ["[C:1]=[CX3;H2,H1:2]", "[C+:1][CX4;H2,H1:2]"],
+    "alkene, terminal": ["[C:1]=[CX3H2:2]", "[C+:1][CX4H2:2]"],
     "alkene": ["[C:1]=[CX3:2]", "[C+:1][CX3:2]"],
+    "alkene (dearomatise)": ["[cH;c:1][cH1:2]", "[CH+;c+:1][CH:2]"],
     "N=": ["[C:1]=[NX2:2]", "[C+:1][N:2]"],
     "C-": ["[C-:1]", "[C+0:1]"],
     # "C-": ["[CX3-:1]", "[CX3+0:1]"],
     "P": ["[P:1]", "[P+1:1]"],
-    "aromatic NH": ["[nH:1]", "[n+:1]"],
+    # "aromatic NH": ["[nH:1]", "[n+:1]"],
     # "aromatic N, sanit": ["[n:1]", "[n:1]"],
-    "amine": ["[NX3:1]", "[NX3+:1]"],
+    # https://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html#N
+    "amine (not amide!)": ["[NX3;H2,H1;!$(NC=O);!$(NC=S):1]", "[NX3+1:1]"],
+    # "amine (pri/sec)": ["[NX3;H2,H1:1]", "[NX3;H2,H1+:1]"],
+    "amine (pri)": ["[NH2:1]", "[NH2+:1]"],
+    "amine (sec)": ["[NH1:1]", "[NH1+:1]"],
+    "amine (any)": ["[NX3:1]", "[NX3+:1]"],
     "alkoxide": ["[O-:1]", "[O:1]"],
     "alcohol": ["[OH:1]", "[OH+:1]"],
     "water": ["[OH2:1]", "[OH2+:1]"],
@@ -57,9 +64,9 @@ nucleophiles = {
     "HF": ["[FH:1]", "[FH+:1]"],
     "NH-": ["[NH-:1]", "[NH+0:1]"],
     "furan": ["[o:1][c:2][cH:3]", "[O+:1]=[C:2][CH:3]"],
-    # "<++>": ["<++>", "<++>"],
-    # "<++>": ["<++>", "<++>"],
-    # "<++>": ["<++>", "<++>"],
+    "thiol": ["[SH:1]", "[SH+:1]"],
+    "P=CH (HWE)": ["[P:1]=[CX3:2]", "[P+:1][CX3:2]"],
+    "thiofuran": ["[s:1]", "[S+:1]"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
@@ -90,32 +97,33 @@ electrophiles = {
     # COC1=NC2=NO[N+]([O-])=C2C=N1.C1CCC(=CC1)N1CCOCC1
     "c=cc=o+": ["[cH:1][c:2][c:3][o+1:4]", "[cH:1][c:2][c:3][o+0:4]"],
     "c=cc=n+": ["[cH:1][c:2][c:3][n+1:4]", "[cH:1][c:2][c:3][n+0:4]"],
+    "c=cc=n (?)": ["[cH:1][c:2][c:3][n:4]", "[cH:1][c:2][c:3][n-:4]"],
     "n=cc=n+": ["[n:1][c:2][c:3][n+1:4]", "[n:1][c:2][c:3][n+0:4]"],
     "enone (aromatic)": ["[cH:1][c:2][c:3]=[O:4]", "[cH:1][c:2][c:3][O-:4]"],
     "azodicarb": ["[N:1]=[N:2][C:3]=[O:4]", "[N:1][N:2]=[C:3][O-:4]"],
-    "enone: C=CC=O": ["[C:1]=[C:2][C:3]=[#8:4]", "[C:1][C:2]=[C:3][#8-:4]"],
+    "enone, C=CC=O": ["[C:1]=[C:2][C:3]=[#8:4]", "[C:1][C:2]=[C:3][#8-:4]"],
     # TODO
     # C[Si](C)(C)OC1=CCCO1.CN1C(=O)[C@H](CC2=CNC3=C2C=CC=C3)\[N+](=C\C=C\C2=CC=CC=C2)C1(C)C
     # C[Si](C)(C)OC1=CCCO1.CN1C(=O)[C@H](CC2=CNC3=C2C=CC=C3)\N(C=CC(C)\C2=CC=CC=C2)C1(C)C
-    "enone: C=CC=N+": [
-        "[CH:1]=[C:2][C:3]=[#7+:4]",
-        "[C:1][C:2]=[C:3][#7+0:4]",
+    "enone, C=CC=N+": [
+        "[CH:1]=[C:2][C:3]=[NX3+:4]",
+        "[#6H:1][#6:2]=[#6:3][#7X3+0:4]",
     ],
-    # "enone: C=N+": ["[C:3]=[#7+:4]", "[C:3][#7+0:4]"],
-    "enone (n)": ["[c:1][c:2][c:3][N+:4]", "[c:1][c:2][c:3][n:4]"],
+    # "enone (n)": ["[c:1][c:2][c:3][N+:4]", "[c:1][c:2][c:3][n:4]"],
     "C+ vinyl": ["[C+:1][C:2]=[C:3]", "[C+0:1][C:2]=[C:3]"],
     "C+ (2 aromatic neighbours)": ["[C+:1]([c:2])[c:3]", "[C+0:1]([c:2])[c:3]"],
     "C+ (1 aromatic neighbour)": ["[c:1][C+:2][C:3]", "[C+0:2]([c:1])[C:3]"],
     "NH=NH+": ["[NH:1]=[NH+:2]", "[NH:1][NH+0:2]"],
     "aryl+": ["[cH+:1]", "[cH+0:1]"],
-    # this leads to MANY false positives
-    # "aryl, sanit": ["[cH:1]", "[c:1]"],
     # this is more sensible, but also gives false positives
-    # "aryl (dearomatise)": ["[cH:1][cH:2]", "[CH:1][CH-1:2]"],
+    "aryl (dearomatise)": ["[cH:1][cX3:2]", "[CH:1][C-1:2]"],
     "C+": ["[CX3+:1]", "[C+0:1]"],
     "C+, cyclopropene": ["[c+:1]1[c:2][c:3]1", "[c+0:1]1[c:2][c:3]1"],
-    "C=N+": ["[C:1]=[N+:2]", "[C:1][N+0:2]"],
-    "carbonyl": ["[CX3:1]=[O:2]", "[CX3:1][O-:2]"],
+    # why does this override aniline?
+    "C=N+": ["[CX3:1]=[NX3+:2]", "[CX4:1][NX3+0:2]"],
+    "c=n+": ["[cH:1][n+:2]", "[CH:1][N+0:2]"],
+    # does this match anything?
+    "carbonyl": ["[CX3:1]=[O:2]", "[C:1][O-:2]"],
     # C\C=C/C.C1=CC=C(C=C1)[C+]=C=C(C1=CC=CC=C1)C1=CC=CC=C1
     "allene": ["[C+:1]=[C:2]=[C:3]", "[C+0:1]=[C:2]=[C:3]"],
     # C[CH-][N+]([O-])=O.CC1=CC=C(C=C2C=CC=C2)C=C1
@@ -126,7 +134,7 @@ electrophiles = {
     # testing...
     "Br": ["[C:1][Br:2]", "[C:1].[Br-:2]"],
     "diazonium": ["[N:1]#[N+:2]", "[N:1]=[N+0:2]"],
-    # "<++>": ["<++>", "<++>"],
+    "C(Cl)2": ["[Cl:1][C:2]([Cl:3])[C:4]=[O:5]", "[Cl:1].[c:2]([Cl:3])[c:4][O-:5]"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
 }
@@ -163,7 +171,7 @@ two_products = {
     # BrCC1=CC=CC=C1.N1C=CC2=C1C=CC=C2
 }
 
-important_reactants = ["P", "C-"]
+important_reactants = ["P", "C-", "thiol"]
 transformations = {}
 important_transformations = {}
 ugly_transformations = {}
@@ -189,7 +197,7 @@ for e_name, e in electrophiles.items():
             two_products[smarts] = [n_name, e_name]
 
         # this is mostly just to give alkene electrophiles low priority
-        elif "C-" in e_pdt:
+        elif "-" in e_pdt:
             ugly_transformations[smarts] = [n_name, e_name]
 
         else:
@@ -213,7 +221,12 @@ sorted_transformations = {}
 for k in sorted(transformations, key=len, reverse=True):
     sorted_transformations[k] = transformations[k]
 
-transformations = important_transformations | two_products | sorted_transformations | ugly_transformations
+transformations = (
+    important_transformations
+    | two_products
+    | sorted_transformations
+    | ugly_transformations
+)
 
 # TODO: find out which nucleophiles/electrophiles were never used, and remove
 # them to reduce iterations
