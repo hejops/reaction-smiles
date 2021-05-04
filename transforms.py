@@ -58,7 +58,7 @@ nucleophiles = {
     "amine (pri)": ["[NH2:1]", "[NH2+:1]"],
     "amine (sec)": ["[NH1:1]", "[NH1+:1]"],
     "amine (any)": ["[NX3:1]", "[NX3+:1]"],
-    "alkoxide": ["[O-:1]", "[O:1]"],
+    "alkoxide": ["[O-:1]", "[O+0:1]"],
     "alcohol": ["[OH:1]", "[OH+:1]"],
     "water": ["[OH2:1]", "[OH2+:1]"],
     "aryl": ["[cH:1]", "[c+0:1]"],
@@ -68,7 +68,7 @@ nucleophiles = {
     "thiol": ["[SH:1]", "[SH+:1]"],
     "P=CH (HWE, neutral)": ["[P:1]=[CX3:2]", "[P+:1][CX3:2]"],
     "thiofuran": ["[s:1]", "[S+:1]"],
-    # "<++>": ["<++>", "<++>"],
+    "NHC": ["[C0:1]([N:2])([N:3])", "[C:1]([N:2])([N:3])"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
@@ -134,11 +134,12 @@ electrophiles = {
     # C[CH-][N+]([O-])=O.CC1=CC=C(C=C2C=CC=C2)C=C1
     # TODO: this should not be triggered
     # CC(C)N.C1CN2CCCC3=C2C(C1)=CC([CH+]\C=C\C1=CC2=C4N(CCCC4=C1)CCC2)=C3>>CC(C)[NH2+]C([CH-][CH+]C1=CC2=C3C(=C1)CCCN3CCC2)C1=CC2=C3C(=C1)CCCN3CCC2
-    "alkene, cC=C": ["[C:1]([c:2])=[C:3]", "[C:1]([c:2])[C-:3]"],
+    "alkene, cC=C": ["[CH:1]([c:2])=[C:3]", "[CH:1]([c:2])[C-:3]"],
     "sulfate, C=CS=O": ["[C:1]=[C:2][S:3]=[O:4]", "[C:1][C:2]=[S:3][O-:4]"],
     "Br": ["[CX4:1][Br:2]", "[C:1].[Br-:2]"],
     "diazonium": ["[N:1]#[N+:2]", "[N:1]=[N+0:2]"],
     "C(Cl)2": ["[Cl:1][C:2]([Cl:3])[C:4]=[O:5]", "[Cl:1].[c:2]([Cl:3])[c:4][O-:5]"],
+    "SMe+": ["[CH3:1][s+1:2]", "[CH3:1].[s+0:2]"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
 }
@@ -175,7 +176,7 @@ two_products = {
     # BrCC1=CC=CC=C1.N1C=CC2=C1C=CC=C2
 }
 
-important_reactants = ["C-:", "P", "S", "s"]
+important_reactants = ["C-:", "P", "S", "s", "C0"]
 transformations = {}
 important_transformations = {}
 ugly_transformations = {}
