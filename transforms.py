@@ -40,7 +40,8 @@ nucleophiles = {
     "NC=N": ["[N:1][C:2]=[N:3]", "[N+:1]=[C:2][N:3]"],
     "nitrile": ["[*+0:1][C:2]#[N:3]", "[*+0:1][C+:2]=[N:3]"],
     "S ylide": ["[S:1]=[CX3:2]", "[S+:1][CX3:2]"],
-    "S ylide, N": ["[S:1][NH-:2]", "[S+:1][NH+0:2]"],
+    "S ylide, N": ["[S:1][NH-:2]", "[S:1][NH+0:2]"],
+    "S ylide, disconnect?": ["[S+:1][CX3:2]", "[S+0:1].[CX3:2]"],
     "alkene, C=CH2 or C=CH": ["[C:1]=[CX3;H2,H1:2]", "[C+:1][CX4;H2,H1:2]"],
     "alkene, terminal": ["[C:1]=[CX3H2:2]", "[C+:1][CX4H2:2]"],
     "alkene": ["[C:1]=[CX3:2]", "[C+:1][CX3:2]"],
@@ -65,7 +66,7 @@ nucleophiles = {
     "NH-": ["[NH-:1]", "[NH+0:1]"],
     "furan": ["[o:1][c:2][cH:3]", "[O+:1]=[C:2][CH:3]"],
     "thiol": ["[SH:1]", "[SH+:1]"],
-    "P=CH (HWE)": ["[P:1]=[CX3:2]", "[P+:1][CX3:2]"],
+    "P=CH (HWE, neutral)": ["[P:1]=[CX3:2]", "[P+:1][CX3:2]"],
     "thiofuran": ["[s:1]", "[S+:1]"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
@@ -85,8 +86,12 @@ electrophiles = {
         "[cH:1][c:2][c:3][c:4][c:5][N+0:6]",
     ],
     "phenol": [
-        "[C:1]=[C:2][C:3]=[C:4][C:5]=[#8:6]",
-        "[C:1][C:2]=[C:3][C:4]=[C:5][#8-:6]",
+        "[C:1]=[C:2][C:3]=[C:4][C:5]=[O:6]",
+        "[C:1][C:2]=[C:3][C:4]=[C:5][O-:6]",
+    ],
+    "phenol, semi-aromatic": [
+        "[C:1]=[C:2][c:3][c:4][C:5]=[O:6]",
+        "[C:1][C:2][c:3][c:4][C:5][O-:6]",
     ],
     "nitro vinyl": [
         "[C:1]=[C:2][N+:3]([O-:4])=[O:5]",
@@ -116,7 +121,7 @@ electrophiles = {
     "NH=NH+": ["[NH:1]=[NH+:2]", "[NH:1][NH+0:2]"],
     "aryl+": ["[cH+:1]", "[cH+0:1]"],
     # this is more sensible, but also gives false positives
-    "aryl (dearomatise)": ["[cH:1][cX3:2]", "[CH:1][C-1:2]"],
+    "aryl (dearomatise)": ["[cH:1][cX3:2]", "[CH:1][C-:2]"],
     "C+": ["[CX3+:1]", "[C+0:1]"],
     "C+, cyclopropene": ["[c+:1]1[c:2][c:3]1", "[c+0:1]1[c:2][c:3]1"],
     # why does this override aniline?
@@ -131,8 +136,7 @@ electrophiles = {
     # CC(C)N.C1CN2CCCC3=C2C(C1)=CC([CH+]\C=C\C1=CC2=C4N(CCCC4=C1)CCC2)=C3>>CC(C)[NH2+]C([CH-][CH+]C1=CC2=C3C(=C1)CCCN3CCC2)C1=CC2=C3C(=C1)CCCN3CCC2
     "alkene, cC=C": ["[C:1]([c:2])=[C:3]", "[C:1]([c:2])[C-:3]"],
     "sulfate, C=CS=O": ["[C:1]=[C:2][S:3]=[O:4]", "[C:1][C:2]=[S:3][O-:4]"],
-    # testing...
-    "Br": ["[C:1][Br:2]", "[C:1].[Br-:2]"],
+    "Br": ["[CX4:1][Br:2]", "[C:1]"],	# fails with Br- for some reason
     "diazonium": ["[N:1]#[N+:2]", "[N:1]=[N+0:2]"],
     "C(Cl)2": ["[Cl:1][C:2]([Cl:3])[C:4]=[O:5]", "[Cl:1].[c:2]([Cl:3])[c:4][O-:5]"],
     # "<++>": ["<++>", "<++>"],
@@ -171,7 +175,7 @@ two_products = {
     # BrCC1=CC=CC=C1.N1C=CC2=C1C=CC=C2
 }
 
-important_reactants = ["P", "C-", "thiol"]
+important_reactants = ["C-:", "P", "S", "s"]
 transformations = {}
 important_transformations = {}
 ugly_transformations = {}
@@ -186,13 +190,21 @@ for e_name, e in electrophiles.items():
         # probably unnecessary...
         e_reac = e[0].replace(":", ":5")
         e_pdt = e[1].replace(":", ":5")
-        smarts = f"{n_reac}.{e_reac}>>{n_pdt}{e_pdt}"
+        reacs = f"{n_reac}.{e_reac}"
+        smarts = f"{reacs}>>{n_pdt}{e_pdt}"
 
         # if full < 8 colons -> simple
 
-        if n_name in important_reactants or e_name in important_reactants:
+        # https://stackoverflow.com/a/3389611
+        # https://stackoverflow.com/a/6531704
+        if any([reac in reacs for reac in important_reactants]):
+            # print(important_reactants, smarts)
             important_transformations[smarts] = [n_name, e_name]
 
+        # elif n_name in important_reactants or e_name in important_reactants:
+        #     important_transformations[smarts] = [n_name, e_name]
+
+        # might not be needed
         elif "." in n_pdt or "." in e_pdt:
             two_products[smarts] = [n_name, e_name]
 
@@ -215,16 +227,22 @@ Reactants with relatively obvious reactive centres (and short smarts) are
 forcibly placed higher in the dictionary.
 """
 
+# TODO: sort the important ones also!
+
 # https://stackoverflow.com/a/11753945
 # https://stackoverflow.com/a/53962042
-sorted_transformations = {}
-for k in sorted(transformations, key=len, reverse=True):
-    sorted_transformations[k] = transformations[k]
+def sort_dict(Dict: dict) -> dict:
+    sorted_dict = {}
+    for k in sorted(Dict, key=len, reverse=True):
+        sorted_dict[k] = Dict[k]
+    return sorted_dict
+
 
 transformations = (
-    important_transformations
-    | two_products
-    | sorted_transformations
+    sort_dict(important_transformations)
+    # probably not necessary anymore
+    # | two_products
+    | sort_dict(transformations)
     | ugly_transformations
 )
 
