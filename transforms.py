@@ -136,7 +136,7 @@ electrophiles = {
     # CC(C)N.C1CN2CCCC3=C2C(C1)=CC([CH+]\C=C\C1=CC2=C4N(CCCC4=C1)CCC2)=C3>>CC(C)[NH2+]C([CH-][CH+]C1=CC2=C3C(=C1)CCCN3CCC2)C1=CC2=C3C(=C1)CCCN3CCC2
     "alkene, cC=C": ["[C:1]([c:2])=[C:3]", "[C:1]([c:2])[C-:3]"],
     "sulfate, C=CS=O": ["[C:1]=[C:2][S:3]=[O:4]", "[C:1][C:2]=[S:3][O-:4]"],
-    "Br": ["[CX4:1][Br:2]", "[C:1]"],	# fails with Br- for some reason
+    "Br": ["[CX4:1][Br:2]", "[C:1].[Br-:2]"],
     "diazonium": ["[N:1]#[N+:2]", "[N:1]=[N+0:2]"],
     "C(Cl)2": ["[Cl:1][C:2]([Cl:3])[C:4]=[O:5]", "[Cl:1].[c:2]([Cl:3])[c:4][O-:5]"],
     # "<++>": ["<++>", "<++>"],
@@ -197,7 +197,7 @@ for e_name, e in electrophiles.items():
 
         # https://stackoverflow.com/a/3389611
         # https://stackoverflow.com/a/6531704
-        if any([reac in reacs for reac in important_reactants]):
+        if any(reac in reacs for reac in important_reactants):
             # print(important_reactants, smarts)
             important_transformations[smarts] = [n_name, e_name]
 
@@ -205,8 +205,8 @@ for e_name, e in electrophiles.items():
         #     important_transformations[smarts] = [n_name, e_name]
 
         # might not be needed
-        elif "." in n_pdt or "." in e_pdt:
-            two_products[smarts] = [n_name, e_name]
+        # if "." in n_pdt or "." in e_pdt:
+        #     two_products[smarts] = [n_name, e_name]
 
         # this is mostly just to give alkene electrophiles low priority
         elif "-" in e_pdt:
