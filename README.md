@@ -5,6 +5,7 @@ Automatically generate products from reactant SMILES.
 ```
 $ python3 generate_products.py [file.csv]
 $ python3 generate_images.py [file_out.csv]
+$ python3 fix_errors.py [file_out.csv]
 ```
 
 This generates a separate file with the suffix `[file]_out.csv` (any
@@ -15,6 +16,7 @@ generate images, run `generate_images.py` on this output file.
 
 - Python 3.9.4
 - RDKit 2021.03.1b1
+<!-- - TODO: Modules used -- https://stackoverflow.com/a/42237244 -->
 
 # How the program works
 
@@ -84,9 +86,6 @@ This iteration process can be fairly CPU-intensive and is *far* from optimised,
 but it seems to work well enough for a relatively small number of
 nucleophiles/electrophiles (currently less than 30 each).
 
-**Important note**: false substructure matches may be obtained; these will be
-fixed in due time!
-
 ## Iterate through csv file, generate images
 
 `generate_products.py` simply parses a csv file and passes every reactant
@@ -98,16 +97,22 @@ As an example, the resulting image of the above reaction should look like this:
 
 ![](example.png)
 
+Since it is difficult to guarantee that the correct transformation is applied,
+false substructure matches will typically be obtained. The generated images
+should then be inspected for errors, and any incorrectly generated reaction
+SMILES can be fixed manually with `fix_errors.py`. This replaces the SMILES
+string in the output file, as well as the corresponding image.
+
 # Limitations (what the program doesn't do... yet)
 
 - Any transformations more complex than a simple single bond formation
 - Automatic creation of new SMARTS (nucleophiles and electrophiles have to be manually added)
 - Reactions with more than 2 reactants
-- Reactions with more than 1 significant product
 
 # TODO
 
 - Concatenate output reaction SMILES to a copy of the input file
+	- This can be achieved with `paste -d, IN.csv <(< OUT.csv awk -F, '{print $NF}') > IN_COPY.csv`
 - Make SMARTS stricter to avoid false positive matches
 - Programmatically detect false positive matches, and give some kind of warning
 - `generate_images.py`: accept reactant SMILES as input
