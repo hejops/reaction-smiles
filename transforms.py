@@ -68,7 +68,7 @@ nucleophiles = {
     "thiol": ["[SH:1]", "[SH+:1]"],
     "P=CH (HWE, neutral)": ["[P:1]=[CX3:2]", "[P+:1][CX3:2]"],
     "thiofuran": ["[s:1]", "[S+:1]"],
-    "NHC": ["[C0:1]([N:2])([N:3])", "[C:1]([N:2])([N:3])"],
+    "NHC": ["[CX2H0:1]([N:2])([N:3])", "[C:1]([N:2])([N:3])"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
     # "<++>": ["<++>", "<++>"],
@@ -176,7 +176,7 @@ two_products = {
     # BrCC1=CC=CC=C1.N1C=CC2=C1C=CC=C2
 }
 
-important_reactants = ["C-:", "P", "S", "s", "C0"]
+important_reactants = ["C-:", "P", "S", "s", "H0"]
 transformations = {}
 important_transformations = {}
 ugly_transformations = {}
@@ -199,7 +199,7 @@ for e_name, e in electrophiles.items():
         # https://stackoverflow.com/a/3389611
         # https://stackoverflow.com/a/6531704
         if any(reac in reacs for reac in important_reactants):
-            # print(important_reactants, smarts)
+            print(reacs)
             important_transformations[smarts] = [n_name, e_name]
 
         # elif n_name in important_reactants or e_name in important_reactants:
