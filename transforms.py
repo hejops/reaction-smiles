@@ -3,6 +3,17 @@
 # import re
 # import sys
 
+# https://stackoverflow.com/a/11753945
+# https://stackoverflow.com/a/53962042
+# TODO: this messes up the dict concatenation for some reason
+# because of reverse=True ???
+def sort_dict(Dict: dict) -> dict:
+    sorted_dict = {}
+    for k in sorted(Dict, key=len, reverse=True):
+        sorted_dict[k] = Dict[k]
+    return sorted_dict
+
+
 # Construct a dictionary of reaction SMARTS to be iterated through
 
 # https://github.com/rdkit/rdkit/discussions/4042#discussioncomment-621064
@@ -199,7 +210,7 @@ for e_name, e in electrophiles.items():
         # https://stackoverflow.com/a/3389611
         # https://stackoverflow.com/a/6531704
         if any(reac in reacs for reac in important_reactants):
-            print(reacs)
+            # print(reacs)
             important_transformations[smarts] = [n_name, e_name]
 
         # elif n_name in important_reactants or e_name in important_reactants:
@@ -210,7 +221,8 @@ for e_name, e in electrophiles.items():
         #     two_products[smarts] = [n_name, e_name]
 
         # this is mostly just to give alkene electrophiles low priority
-        elif "-" in e_pdt:
+        elif "C-" in e_pdt:
+            # print(e_pdt)
             ugly_transformations[smarts] = [n_name, e_name]
 
         else:
@@ -228,24 +240,13 @@ Reactants with relatively obvious reactive centres (and short smarts) are
 forcibly placed higher in the dictionary.
 """
 
-# TODO: sort the important ones also!
+sort_dict(important_transformations)
+sort_dict(transformations)
+sort_dict(ugly_transformations)
 
-# https://stackoverflow.com/a/11753945
-# https://stackoverflow.com/a/53962042
-def sort_dict(Dict: dict) -> dict:
-    sorted_dict = {}
-    for k in sorted(Dict, key=len, reverse=True):
-        sorted_dict[k] = Dict[k]
-    return sorted_dict
+transformations = important_transformations | transformations | ugly_transformations
 
-
-transformations = (
-    sort_dict(important_transformations)
-    # probably not necessary anymore
-    # | two_products
-    | sort_dict(transformations)
-    | ugly_transformations
-)
+# probably not necessary anymore: two_products
 
 # TODO: find out which nucleophiles/electrophiles were never used, and remove
 # them to reduce iterations
