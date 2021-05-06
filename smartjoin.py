@@ -39,12 +39,14 @@ dashes = "-" * shutil.get_terminal_size().columns
 # TODO: fix hinting? probably rdkit's fault
 
 
-def guess_rxn(reactants: str, smarts=None) -> dict:
+def guess_rxn(reactants: str, smarts: str = None) -> dict:
     """
     Arguments:
         reactants:	reactants (string: A.B)
+        smarts:	    smarts (string: A.B; optional)
 
     Attempt to apply every stored smarts to the reactants
+    If a smarts is provided, it will be used directly without any iteration
 
     Returns all successful reactions as a nested dict:
 
@@ -52,7 +54,8 @@ def guess_rxn(reactants: str, smarts=None) -> dict:
             product (rdkit tuple object): {
                 "smarts": transformation smarts (str),
                 "names": names (str),
-            }
+            },
+            ...
         }
 
     Note: An exit will be called if no suitable transformation is found
@@ -144,14 +147,14 @@ def get_product_smiles(product) -> tuple[str, bool]:
     return product_smiles, sanit
 
 
-def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
+def get_full_reaction(reactants: str, target_product=None) -> tuple[str, str, bool]:
     """
     Arguments:
         reactants (string)
 
     Returns:
         full smiles (string)
-        transformation name (string)
+        transformation name (list)
         sanitization state (boolean)
     """
 
@@ -198,19 +201,30 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
             full_smiles = f"{reactants}>>{product_smiles}"
             # print(get_product_smiles(product_tuple[0][1])[0])
 
-            if (
-                attempted_transformation["smarts"] in two_products
-                and len(product_tuple) > 1
-            ):
-                ps2, _ = get_product_smiles(product_tuple[0][1])
-                full_smiles += f".{ps2}"
+            if target_product and full_smiles == target_product:
+                print("MATCHED TARGET")
+                # print(product_smiles)
+                # print(target_product)
+                # print(successful_rxns)
+                return "", successful_rxns[product_tuple]["names"], True
 
-            elif len(product_tuple) > 1:
-                ps2, _ = get_product_smiles(product_tuple[0][1])
-                full_smiles += f".{ps2}"
+            # if (
+            #     attempted_transformation["smarts"] in two_products
+            #     and len(product_tuple) > 1
+            # ):
+            #     ps2, _ = get_product_smiles(product_tuple[0][1])
+            #     full_smiles += f".{ps2}"
+
+            # always trying is potentially slow
+            if len(product_tuple) > 1:
+                try:
+                    ps2, _ = get_product_smiles(product_tuple[0][1])
+                    full_smiles += f".{ps2}"
+                except:
+                    pass
 
             good_smiles[full_smiles] = current_reaction
-            print(attempted_transformation["names"], attempted_transformation["smarts"])
+            # print(attempted_transformation["names"], attempted_transformation["smarts"])
 
             # avoid going into low priority transformations if good products
             # have already been found
@@ -225,7 +239,7 @@ def get_full_reaction(reactants: str) -> tuple[str, str, bool]:
                 break
 
             if j + 1 == len(x):
-                print(f"{i+1}: {current_reaction}, {j} products")
+                print(f"{i+1}: {current_reaction}, {j+1} products")
 
     # logging.info(good_smiles)
     # sys.exit()
@@ -303,8 +317,8 @@ def main():
         use_known_smarts(reactants, sys.argv[2])
 
     else:
-        # get_full_reaction(reactants)
-        show_transformations(reactants)
+        get_full_reaction(reactants)
+        # show_transformations(reactants)
 
 
 if __name__ == "__main__":
