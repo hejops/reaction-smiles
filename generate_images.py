@@ -26,7 +26,9 @@ def main(db):
     for i, row in enumerate(reader):
         N = row["N"]
         reaction = row["SMILES"]
-        imgpath = f"reactions/{i+1}_{N}.png"
+        reacs = ", ".join(sorted([row["Reactant 1"], row["Reactant 2"]]))
+        Path(f"reactions/{reacs}").mkdir(parents=True, exist_ok=True)
+        imgpath = f"reactions/{reacs}/{i+1}_{N}.png"
         draw_mol(reaction, imgpath)
 
         print(f"\rGenerated {i+1} images...", end="")
