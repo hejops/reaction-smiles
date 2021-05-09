@@ -16,18 +16,40 @@ from smartjoin import *
 from drawops import *
 
 
-def get_smarts(reactants):
+def get_smarts(reactants: str, line: str):
     delim = " + "
     successful_rxns = guess_rxn(reactants)
     rxns = [delim.join(x["names"]) for x in list(successful_rxns.values())]
 
     fzf = FzfPrompt()
-    chosen_rxn = fzf.prompt(rxns)[0].split(delim)
+    chosen_rxn = fzf.prompt(rxns, f'--prompt="Reaction {line}: "')[0].split(delim)
 
     for val in successful_rxns.values():
         if chosen_rxn in val.values():
             # TODO: also return the rxns, so that the csv can be updated
             return val["smarts"]
+
+
+def fix_rxn(line: str, x: list):
+
+    row = df["Line"] == line
+    bad_rxn = df.loc[row, "SMILES"].values.item().split(">>")[0]
+    print(bad_rxn)
+    N = df.loc[row, "N"].values.item()
+
+    # if not smarts:
+    smarts = get_smarts(bad_rxn, line)
+    # TODO: currently, looping is not much use if same smarts is always used
+    # use a try/except?
+
+    fixed_rxn = use_known_smarts(bad_rxn, smarts)
+
+    df.at[row, "SMILES"] = fixed_rxn
+    imgpath = f"reactions/{line}_{N}.png"
+    draw_mol(fixed_rxn, imgpath)
+
+    print(f"Fixed reaction {line}")
+    x.append(line)
 
 
 def main():
@@ -48,47 +70,42 @@ def main():
 
     # for line in lines:
 
+    global df
     df = pd.read_csv(file)
     x = []
 
     while True:
 
         try:
+            lines = input("Reaction number: ")
 
-            line = input("Reaction number: ")
+            if not lines:
+                lines = x[-1] + 1
 
-            if not line:
-                line = x[-1] + 1
+            elif "," in lines:
+                lines = lines.split(",")
+
+            elif "-" in lines:
+                start = int(lines.split("-")[0])
+                end = int(lines.split("-")[1]) + 1
+                lines = range(start, end)
+                print(lines)
+
             else:
-                line = int(line)
+                lines = [lines]
 
-            x.append(line)
-            # print(x)
+            lines = [int(line) for line in lines]
 
-            row = df["Line"] == line
-            bad_rxn = df.loc[row, "SMILES"].values.item().split(">>")[0]
-            print(bad_rxn)
-            N = df.loc[row, "N"].values.item()
+            for line in lines:
+                fix_rxn(line, x)
 
-            # if not smarts:
-            smarts = get_smarts(bad_rxn)
-            # TODO: currently, looping is not much use if same smarts is always used
-            # use a try/except?
-
-            fixed_rxn = use_known_smarts(bad_rxn, smarts)
-
-            df.at[row, "SMILES"] = fixed_rxn
-            imgpath = f"reactions/{line}_{N}.png"
-            draw_mol(fixed_rxn, imgpath)
-
-            print(f"Fixed reaction {line}")
-
-        except:
+        except KeyboardInterrupt:
             df.to_csv(file, index=False)
             print(f"Wrote: {file}")
             sys.exit()
 
     # df.to_csv(file, index=False)
+
 
 if __name__ == "__main__":
     main()
