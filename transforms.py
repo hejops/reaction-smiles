@@ -39,9 +39,12 @@ nucleophiles = {
         "[O:1]=[C:2][C+:3]([C:4]=[O:5])",
     ],
     "carboxylate": ["[O:1]=[C:2][O-:3]", "[O:1]=[C:2][O+0:3]"],
-    "azide, CNN-/NNN-": ["[N+:2]=[N-:3]", "[N+:2]=[N+0:3]"],
+    "azide, CNN-/NNN-": ["[N+:1]=[N-:2]", "[N+:1]=[N+0:2]"],
     # "azide, NNC-": ["[N:1]#[N:2]=[CH:3]", "[N:1]#[N+:2][CH:3]"],
-    "amide": ["[nH:1][c:2]=[O:3]", "[nH+:1]=[c:2][O:3]"],
+    # 126-137
+    "2-pyridone (N-)": ["[O:1]=[c:2][n-1:3]", "[O:1]=[c:2][n-0:3]"],
+    # 138-146
+    "4-pyridone (N-)": ["[O:1]=[c:2][c:3][c:4][n-:5]", "[O:1]=[c:2][c:3][c:4][n-0:5]"],
     # "imidazole, H": ["[nH:1][c:2][n:3]", "[nH+:1][c:2][n:3]"],
     "imidazole": ["[n:1][c:2][n:3]", "[n+1:1][c:2][n:3]"],
     # "imidazole, de-arom": ["[n:1][c:2][n:3]", "[N+1:1]=[C:2][N:3]"],
@@ -113,9 +116,11 @@ electrophiles = {
     # COC1=NC2=NO[N+]([O-])=C2C=N1.C1CCC(=CC1)N1CCOCC1
     "c=cc=o+": ["[cH:1][c:2][c:3][o+1:4]", "[cH:1][c:2][c:3][o+0:4]"],
     "c=cc=n+": ["[cH:1][c:2][c:3][n+1:4]", "[cH:1][c:2][c:3][n+0:4]"],
-    "c=cc=n (?)": ["[cH:1][c:2][c:3][n:4]", "[cH:1][c:2][c:3][n-:4]"],
-    "n=cc=n+": ["[n:1][c:2][c:3][n+1:4]", "[n:1][c:2][c:3][n+0:4]"],
+    "c=cc=n": ["[cH:1][c:2][c:3][n:4]", "[cH:1][c:2][c:3][n-:4]"],
+    # probably not used
+    # "n=cc=n+": ["[n:1][c:2][c:3][n+1:4]", "[n:1][c:2][c:3][n+0:4]"],
     "enone (aromatic)": ["[cH:1][c:2][c:3]=[O:4]", "[cH:1][c:2][c:3][O-:4]"],
+    "azodicarb (extended)": ["[C:1]=[C:2][N:3]=[N:4][C:5]=[O:6]", "[C:1][C:2]=[N:3][N:4]=[C:5][O-:6]"],
     "azodicarb": ["[N:1]=[N:2][C:3]=[O:4]", "[N:1][N:2]=[C:3][O-:4]"],
     "enone, C=CC=O": ["[C:1]=[C:2][C:3]=[#8:4]", "[C:1][C:2]=[C:3][#8-:4]"],
     # TODO
@@ -138,7 +143,7 @@ electrophiles = {
     # why does this override aniline?
     "C=N+": ["[CX3:1]=[NX3+:2]", "[CX4:1][NX3+0:2]"],
     "c=n+": ["[cH:1][n+:2]", "[CH:1][N+0:2]"],
-    # does this match anything?
+    # TODO: why does this keep taking priority?
     "carbonyl": ["[CX3:1]=[O:2]", "[C:1][O-:2]"],
     # C\C=C/C.C1=CC=C(C=C1)[C+]=C=C(C1=CC=CC=C1)C1=CC=CC=C1
     "allene": ["[C+:1]=[C:2]=[C:3]", "[C+0:1]=[C:2]=[C:3]"],
