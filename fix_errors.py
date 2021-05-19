@@ -3,6 +3,7 @@
 # import requests
 # import urllib
 from pyfzf.pyfzf import FzfPrompt
+import argparse
 import logging
 import os
 import pandas as pd
@@ -30,12 +31,21 @@ def get_smarts(reactants: str, line: str):
             return val["smarts"]
 
 
-def fix_rxn(line: str, x: list):
+def fix_rxn(column: str, line: str, x: list):
 
-    row = df["Line"] == line
-    bad_rxn = df.loc[row, "SMILES"].values.item().split(">>")[0]
-    print(bad_rxn)
+    # row = df["Line"] == line
+    row = df[column] == line
+
+    # if column != "Line":
+    line = df.loc[row, "Line"].values.item()
     N = df.loc[row, "N"].values.item()
+    # row.loc["N"]?
+
+    bad_rxn = df.loc[row, "SMILES"].values.item()
+    draw_mol(bad_rxn, show=True)
+    print(bad_rxn)
+
+    bad_rxn = bad_rxn.split(">>")[0]
 
     # if not smarts:
     smarts = get_smarts(bad_rxn, line)
@@ -57,7 +67,35 @@ def main():
     Docstring
     """
 
-    file = sys.argv[1]
+    parser = argparse.ArgumentParser(
+        description=main.__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        # formatter_class=SortingHelpFormatter,
+    )
+
+    parser.add_argument(
+        "file",
+        help="csv file",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--column",
+        # const="col",
+        # action="store_const",
+        default="Line",
+        # nargs="+",
+        help="name of column containing SMILES to be processed",
+    )
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        # const="list",
+        # action="store_const",
+        help="read numbers from a file",
+    )
+
+    args = parser.parse_args()
 
     # TODO: argparse with int range https://stackoverflow.com/a/6512463
     # start = int(sys.argv[2])
@@ -71,37 +109,46 @@ def main():
     # for line in lines:
 
     global df
-    df = pd.read_csv(file)
+    df = pd.read_csv(args.file)
+    print("Loaded", args.file)
     x = []
 
     while True:
 
         try:
-            lines = input("Reaction number: ")
 
-            if not lines:
-                lines = x[-1] + 1
-
-            elif "," in lines:
-                lines = lines.split(",")
-
-            elif "-" in lines:
-                start = int(lines.split("-")[0])
-                end = int(lines.split("-")[1]) + 1
-                lines = range(start, end)
-                print(lines)
+            if args.input_file:
+                with open(args.input_file) as f:
+                    lines = [line.rstrip() for line in f]
+                # print(lines)
 
             else:
-                lines = [lines]
+
+                lines = input("Reaction number: ")
+
+                if not lines:
+                    lines = x[-1] + 1
+
+                elif "," in lines:
+                    lines = lines.split(",")
+
+                elif "-" in lines:
+                    start = int(lines.split("-")[0])
+                    end = int(lines.split("-")[1]) + 1
+                    lines = range(start, end)
+                    print(lines)
+
+                else:
+                    lines = [lines]
 
             lines = [int(line) for line in lines]
 
             for line in lines:
-                fix_rxn(line, x)
+                fix_rxn(args.column, line, x)
 
         except KeyboardInterrupt:
-            df.to_csv(file, index=False)
-            print(f"Wrote: {file}")
+            df.to_csv(args.file, index=False)
+            print(f"Wrote: {args.file}")
             sys.exit()
 
     # df.to_csv(file, index=False)
