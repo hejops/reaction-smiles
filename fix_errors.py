@@ -54,12 +54,31 @@ def fix_rxn(column: str, line: str, x: list):
 
     fixed_rxn = use_known_smarts(bad_rxn, smarts)
 
+    if "c" in fixed_rxn:
+        force_fixed_rxn = input_with_prefill(
+            "Unusual aromatic? Fix required: ", fixed_rxn
+        )
+        fixed_rxn = force_fixed_rxn
+
     df.at[row, "SMILES"] = fixed_rxn
     imgpath = f"reactions/{line}_{N}.png"
     draw_mol(fixed_rxn, imgpath)
 
     print(f"Fixed reaction {line}")
+    # sys.exit()
     x.append(line)
+
+
+def input_with_prefill(prompt: str, text: str) -> str:
+    # https://stackoverflow.com/a/8505387
+    def hook():
+        readline.insert_text(text)
+        readline.redisplay()
+
+    readline.set_pre_input_hook(hook)
+    result = input(prompt)
+    readline.set_pre_input_hook()
+    return result
 
 
 def main():
@@ -119,7 +138,7 @@ def main():
 
             if args.input_file:
                 with open(args.input_file) as f:
-                    lines = [line.rstrip() for line in f]
+                    lines = [line.rstrip() for line in f if not line.startswith("#")]
                 # print(lines)
 
             else:
@@ -146,7 +165,8 @@ def main():
             for line in lines:
                 fix_rxn(args.column, line, x)
 
-        except KeyboardInterrupt:
+        # except KeyboardInterrupt:
+        except:
             df.to_csv(args.file, index=False)
             print(f"Wrote: {args.file}")
             sys.exit()
