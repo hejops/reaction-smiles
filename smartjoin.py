@@ -18,8 +18,6 @@ import sys
 # from molops import *
 from transforms import *
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
 # suppress annoying sanitization warnings
 # https://github.com/rdkit/rdkit/issues/2683#issuecomment-538872880
 RDLogger.DisableLog("rdApp.*")
@@ -64,6 +62,7 @@ def guess_rxn(reactants: str, smarts: str = None) -> dict:
     def get_product_tuple(reactant_tuple, names):
         # The reactant tuple must be reversed because smarts order is
         # important!
+        # print(reactant_tuple)
         product_tuple_1 = reaction.RunReactants(reactant_tuple)
         product_tuple_2 = reaction.RunReactants(reactant_tuple[::-1])
 
@@ -215,13 +214,13 @@ def get_full_reaction(reactants: str, target_product=None) -> tuple[str, str, bo
             #     ps2, _ = get_product_smiles(product_tuple[0][1])
             #     full_smiles += f".{ps2}"
 
-            # always trying is potentially slow
-            if len(product_tuple) > 1:
-                try:
-                    ps2, _ = get_product_smiles(product_tuple[0][1])
-                    full_smiles += f".{ps2}"
-                except:
-                    pass
+            # # always trying is potentially slow
+            # if len(product_tuple) > 1:
+            #     try:
+            #         ps2, _ = get_product_smiles(product_tuple[0][1])
+            #         full_smiles += f".{ps2}"
+            #     except:
+            #         pass
 
             good_smiles[full_smiles] = current_reaction
             # print(attempted_transformation["names"], attempted_transformation["smarts"])
@@ -278,17 +277,24 @@ def get_full_reaction(reactants: str, target_product=None) -> tuple[str, str, bo
         return result, bad_smiles[result], False
 
 
-def use_known_smarts(reactants, smarts):
+def use_known_smarts(reactants, smarts, all_products=False):
     # if smarts is known, this can be used to fix errors
     successful_rxns = guess_rxn(reactants, smarts)
+    # print(len(list(successful_rxns)[0]))
     p = get_product_smiles(list(successful_rxns)[0][0][0])[0]
     f = f"{reactants}>>{p}"
     print(f)
 
+    # if 2nd product exists, and is longer than the 1st, use it
+    # TODO: use len := instead of try
     try:
         p2 = get_product_smiles(list(successful_rxns)[0][0][1])[0]
         print(f"Detected second product: {p2}")
-        f = f"{f}.{p2}"
+        if len(p2) > len(p):
+            if all_products:
+                f = f"{f}.{p2}"
+            else:
+                f = f"{reactants}>>{p2}" 
     except:
         pass
 
@@ -322,4 +328,6 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
     main()
