@@ -5,8 +5,6 @@
 
 # https://stackoverflow.com/a/11753945
 # https://stackoverflow.com/a/53962042
-# TODO: this messes up the dict concatenation for some reason
-# because of reverse=True ???
 def sort_dict(Dict: dict) -> dict:
     sorted_dict = {}
     for k in sorted(Dict, key=len, reverse=True):
@@ -31,6 +29,7 @@ nucleophiles = {
     # "SnCC=C": ["[Sn:1][C:2][C:3]=[CX3:4]", "[Sn:1][C:2][C+:3][CX3:4]"],
     "SiCC=C": ["[Si:1][C:2][C:3]=[C:4]", "[Si:1][C:2][C+:3][C:4]"],
     # "silyl, from O": ["[Si:1][O:2][C:3]=[C:4]", "[Si:1][O+:2]=[C:3][C:4]"],
+    # "silyl, SiOC=C (preserve charge)": ["[Si:1][O:2][C:3]=[CX3:4]", "[Si:1][O:2][C:3][CX4:4]"],
     "silyl, SiOC=C": ["[Si:1][O:2][C:3]=[CX3:4]", "[Si:1][O:2][C+:3][CX3:4]"],
     # "silyl, sanit": ["[Si:1][O:2][C:3]=[C:4]", "[Si:1][O:2][C:3][C:4]"],
     "enolate": ["[C:1]=[C:2][O-:3]", "[C:1]=[C:2][O:3]"],
@@ -45,12 +44,16 @@ nucleophiles = {
     "2-pyridone (N-)": ["[O:1]=[c:2][n-1:3]", "[O:1]=[c:2][n-0:3]"],
     # 138-146
     "4-pyridone (N-)": ["[O:1]=[c:2][c:3][c:4][n-:5]", "[O:1]=[c:2][c:3][c:4][n-0:5]"],
-    # "imidazole, H": ["[nH:1][c:2][n:3]", "[nH+:1][c:2][n:3]"],
-    "imidazole": ["[n:1][c:2][n:3]", "[n+1:1][c:2][n:3]"],
+    # i -think- this is the right way to do it...
+    "imidazole, H": ["[nH:1][c:2][n:3]", "[NH+:1]=[C:2][N:3]"],
+    # "imidazole": ["[n:1][c:2][n:3]", "[n+1:1][c:2][n:3]"],
     # "imidazole, de-arom": ["[n:1][c:2][n:3]", "[N+1:1]=[C:2][N:3]"],
     "pyridine": ["[n:1]([c:2])([c:3])", "[n+:1]([c:2])([c:3])"],
     "enamine": ["[N:1][C:2]=[C:3]", "[N+:1]=[C:2][C:3]"],
+    "enamine (preserve charge)": ["[N:1][C:2]=[CH:3]", "[N:1][C:2]=[C:3]"],
     "enamine, aromatic": ["[nX3:1][c:2][cH:3]", "[NX3+:1]=[C:2][CH:3]"],
+    # "enamine, aromatic (preserve charge)": ["[n:1][c:2][cHr5:3]", "[n:1][c:2][cr5:3]"],
+    "enamine, aromatic (preserve charge)": ["[nH:1]", "[n:1]"],
     "NC=N": ["[N:1][C:2]=[N:3]", "[N+:1]=[C:2][N:3]"],
     "nitrile": ["[*+0:1][C:2]#[N:3]", "[*+0:1][C+:2]=[N:3]"],
     "S ylide": ["[S:1]=[CX3:2]", "[S+:1][CX3:2]"],
@@ -60,14 +63,16 @@ nucleophiles = {
     "alkene, terminal": ["[C:1]=[CX3H2:2]", "[C+:1][CX4H2:2]"],
     "alkene": ["[C:1]=[CX3:2]", "[C+:1][CX3:2]"],
     "alkene (dearomatise)": ["[cH;c:1][cH1:2]", "[CH+;c+:1][CH:2]"],
+    "alkene (preserve arom)": ["[cH:1]", "[c:1]"],
     "N=": ["[C:1]=[NX2:2]", "[C+:1][N:2]"],
     "C-": ["[C-:1]", "[C+0:1]"],
+    "c- (Cp)": ["[cH-:1]", "[cH+0:1]"],
     # "C-": ["[CX3-:1]", "[CX3+0:1]"],
     "P": ["[P:1]", "[P+1:1]"],
     # "aromatic NH": ["[nH:1]", "[n+:1]"],
     # "aromatic N, sanit": ["[n:1]", "[n:1]"],
     # https://www.daylight.com/dayhtml_tutorials/languages/smarts/smarts_examples.html#N
-    "amine (not amide!)": ["[NX3;H2,H1;!$(NC=O);!$(NC=S):1]", "[NX3+1:1]"],
+    "amine (not amide)": ["[NX3;H2,H1;!$(NC=O);!$(NC=S):1]", "[NX3+1:1]"],
     # "amine (pri/sec)": ["[NX3;H2,H1:1]", "[NX3;H2,H1+:1]"],
     "amine (pri)": ["[NH2:1]", "[NH2+:1]"],
     "amine (sec)": ["[NH1:1]", "[NH1+:1]"],
@@ -75,6 +80,7 @@ nucleophiles = {
     "alkoxide": ["[O-:1]", "[O+0:1]"],
     "alcohol": ["[OH:1]", "[OH+:1]"],
     "water": ["[OH2:1]", "[OH2+:1]"],
+    "water (unchanged)": ["[OH2:1]", "[OH:1]"],
     "aryl": ["[cH:1]", "[c+0:1]"],
     "HF": ["[FH:1]", "[FH+:1]"],
     "NH-": ["[NH-:1]", "[NH+0:1]"],
@@ -115,18 +121,23 @@ electrophiles = {
     # see https://github.com/rdkit/rdkit/discussions/4083#discussioncomment-655125
     # COC1=NC2=NO[N+]([O-])=C2C=N1.C1CCC(=CC1)N1CCOCC1
     "c=cc=o+": ["[cH:1][c:2][c:3][o+1:4]", "[cH:1][c:2][c:3][o+0:4]"],
+    "c=cc=o+ (preserve arom)": ["[cH:1][c:2][c:3][o+1:4]", "[cH:1][c:2][c:3][o+1:4]"],
     "c=cc=n+": ["[cH:1][c:2][c:3][n+1:4]", "[cH:1][c:2][c:3][n+0:4]"],
     "c=cc=n": ["[cH:1][c:2][c:3][n:4]", "[cH:1][c:2][c:3][n-:4]"],
+    "c=cc=n (preserve arom)": ["[cH:1][c:2][c:3][n:4]", "[c:1][c:2][c:3][n:4]"],
     # probably not used
     # "n=cc=n+": ["[n:1][c:2][c:3][n+1:4]", "[n:1][c:2][c:3][n+0:4]"],
     "enone (aromatic)": ["[cH:1][c:2][c:3]=[O:4]", "[cH:1][c:2][c:3][O-:4]"],
-    "azodicarb (extended)": ["[C:1]=[C:2][N:3]=[N:4][C:5]=[O:6]", "[C:1][C:2]=[N:3][N:4]=[C:5][O-:6]"],
+    "azodicarb (extended)": [
+        "[C:1]=[C:2][N:3]=[N:4][C:5]=[O:6]",
+        "[C:1][C:2]=[N:3][N:4]=[C:5][O-:6]",
+    ],
     "azodicarb": ["[N:1]=[N:2][C:3]=[O:4]", "[N:1][N:2]=[C:3][O-:4]"],
-    "enone, C=CC=O": ["[C:1]=[C:2][C:3]=[#8:4]", "[C:1][C:2]=[C:3][#8-:4]"],
+    "enone (C=CC=O)": ["[C:1]=[C:2][C:3]=[#8:4]", "[C:1][C:2]=[C:3][#8-:4]"],
     # TODO
     # C[Si](C)(C)OC1=CCCO1.CN1C(=O)[C@H](CC2=CNC3=C2C=CC=C3)\[N+](=C\C=C\C2=CC=CC=C2)C1(C)C
     # C[Si](C)(C)OC1=CCCO1.CN1C(=O)[C@H](CC2=CNC3=C2C=CC=C3)\N(C=CC(C)\C2=CC=CC=C2)C1(C)C
-    "enone, C=CC=N+": [
+    "enone (C=CC=N+)": [
         "[CH:1]=[C:2][C:3]=[NX3+:4]",
         "[#6H:1][#6:2]=[#6:3][#7X3+0:4]",
     ],
@@ -137,13 +148,12 @@ electrophiles = {
     "NH=NH+": ["[NH:1]=[NH+:2]", "[NH:1][NH+0:2]"],
     "aryl+": ["[cH+:1]", "[cH+0:1]"],
     # this is more sensible, but also gives false positives
-    "aryl (dearomatise)": ["[cH:1][cX3:2]", "[CH:1][C-:2]"],
+    # "aryl (dearomatise)": ["[cH:1][cX3:2]", "[CH:1][C-:2]"],
     "C+": ["[CX3+:1]", "[C+0:1]"],
+    # "C+ccn": ["[CH1+:1][c:2][c:3][n:4]", "[CH1+0:1][C:2]=[C:3][NH1:4]"],
     "C+, cyclopropene": ["[c+:1]1[c:2][c:3]1", "[c+0:1]1[c:2][c:3]1"],
-    # why does this override aniline?
     "C=N+": ["[CX3:1]=[NX3+:2]", "[CX4:1][NX3+0:2]"],
     "c=n+": ["[cH:1][n+:2]", "[CH:1][N+0:2]"],
-    # TODO: why does this keep taking priority?
     "carbonyl": ["[CX3:1]=[O:2]", "[C:1][O-:2]"],
     # C\C=C/C.C1=CC=C(C=C1)[C+]=C=C(C1=CC=CC=C1)C1=CC=CC=C1
     "allene": ["[C+:1]=[C:2]=[C:3]", "[C+0:1]=[C:2]=[C:3]"],
@@ -160,39 +170,7 @@ electrophiles = {
     # "<++>": ["<++>", "<++>"],
 }
 
-# edge cases
-two_products = {
-    # C[Si](C)(C)OC1=CCCO1.ClC1=CC(Cl)(Cl)C(=O)C2=C1C=CC=N2
-    # C1CCC(=CC1)N1CCOCC1.ClC1=CC(Cl)(Cl)C(=O)C2=C1C=CC=N2
-    "[Si:1][O:2][C:3]=[C:4].[C:5]([Cl:6])([Cl:7])[C:8]=[O:9]>>[Si:1][O:2][C+:3][C:4][Cl:6].[C:5]([Cl:7])=[C:8][O-:9]": [
-        "silyl",
-        "C(Cl)2",
-    ],
-    "[N:1][C:2]=[CX3:3].[C:5]([Cl:6])([Cl:7])[C:8]=[O:9]>>[N+:1]=[C:2][C:3][Cl:6].[C:5]([Cl:7])=[C:8][O-:9]": [
-        "enamine",
-        "C(Cl)2",
-    ],
-    # TODO: main product is not getting returned in full smiles
-    # O.C[S+]1C2=C(C=CC=C2)C2=C1C=CC=C2
-    # CO.C[S+]1C2=C(C=CC=C2)C2=C1C=CC=C2
-    "[OX2:1].[CH3:2][s+:3]>>[OX2+:1][CH3:2].[s+0:3]": [
-        "water",
-        "CH3S+",
-    ],
-    # "[C-:1].[C:2][Br:3]>>[C+0:1][C:2].[Br-:3]": [
-    #     "C-",
-    #     "Br",
-    # ],
-    # # CCCN.BrCC1=CC=CC=C1
-    # "[NX3:1].[C:4][Br:5]>>[NX3+:1][C:4].[Br-:5]": [
-    #     "amine",
-    #     "Br",
-    # ],
-    # enamine ccn
-    # BrCC1=CC=CC=C1.N1C=CC2=C1C=CC=C2
-}
-
-important_reactants = ["C-:", "P", "S", "s", "H0"]
+important_reactants = ["C-:", "P", "S", "s", "H0", "Cl"]
 transformations = {}
 important_transformations = {}
 ugly_transformations = {}
@@ -221,10 +199,6 @@ for e_name, e in electrophiles.items():
         # elif n_name in important_reactants or e_name in important_reactants:
         #     important_transformations[smarts] = [n_name, e_name]
 
-        # might not be needed
-        # if "." in n_pdt or "." in e_pdt:
-        #     two_products[smarts] = [n_name, e_name]
-
         # this is mostly just to give alkene electrophiles low priority
         elif "C-" in e_pdt:
             # print(e_pdt)
@@ -250,8 +224,6 @@ sort_dict(transformations)
 sort_dict(ugly_transformations)
 
 transformations = important_transformations | transformations | ugly_transformations
-
-# probably not necessary anymore: two_products
 
 # TODO: find out which nucleophiles/electrophiles were never used, and remove
 # them to reduce iterations
