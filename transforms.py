@@ -223,7 +223,12 @@ sort_dict(important_transformations)
 sort_dict(transformations)
 sort_dict(ugly_transformations)
 
-transformations = important_transformations | transformations | ugly_transformations
+# dict | dict merge requires python3.9
+transformations = {
+    **important_transformations,
+    **transformations,
+    **ugly_transformations,
+}
 
 # TODO: find out which nucleophiles/electrophiles were never used, and remove
 # them to reduce iterations
